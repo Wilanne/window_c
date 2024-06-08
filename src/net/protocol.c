@@ -1,6 +1,4 @@
 // Author : Leo AUBRY
-// Author : Baptiste JOUBERT
-// Author : THEO MALINGE
 
 #include <stdlib.h>
 #include <string.h>
@@ -8,25 +6,25 @@
 
 #include "protocol.h"
 
-
 /////////////////////////// Serialize ////////////////////////////////
 
 //////////////////////////  ASK MOVING   //////////////////////////
 
 void serialize_msg_askMoving(const msg_askMoving_t *msg, uint8_t *buffer) {
-    uint32_t length = sizeof(msg_askMoving_t);
-    uint32_t net_length = htonl(length);
+    uint32_t net_length = htonl(msg->header.length);
     uint32_t net_type = htonl(msg->header.type);
+    uint16_t net_direction = htons(msg->direction);
+    uint16_t net_speed = htons(msg->speed);
 
     memcpy(buffer, &net_length, sizeof(net_length));
     memcpy(buffer + sizeof(net_length), &net_type, sizeof(net_type));
-    memcpy(buffer + sizeof(net_length) + sizeof(net_type), &msg->direction, sizeof(msg->direction));
-    memcpy(buffer + sizeof(net_length) + sizeof(net_type) + sizeof(msg->direction), &msg->speed, sizeof(msg->speed));
+    memcpy(buffer + sizeof(net_length) + sizeof(net_type), &net_direction, sizeof(net_direction));
+    memcpy(buffer + sizeof(net_length) + sizeof(net_type) + sizeof(net_direction), &net_speed, sizeof(net_speed));
 }
 
 //////////////////////////  ASK MOVING_PACKED   //////////////////////////
 
-void serialize_msg_askMoving(const msg_askMoving_packed_t *msg, uint8_t *buffer) {
+void serialize_msg_askMoving_Packed(const msg_askMoving_packed_t *msg, uint8_t *buffer) {
     uint32_t length = sizeof(msg_askMoving_packed_t);
     uint32_t net_length = htons(length);
     uint32_t net_type = htons(msg->header.type);
@@ -56,14 +54,17 @@ void serialize_msg_sendInfoRobot(const msg_sendInfoRobot_t *msg, uint8_t *buffer
 
 void deserialize_msg_askMoving(const uint8_t *buffer, msg_askMoving_t *msg) {
     uint32_t net_length, net_type;
+    uint16_t net_direction, net_speed;
+
     memcpy(&net_length, buffer, sizeof(net_length));
     memcpy(&net_type, buffer + sizeof(net_length), sizeof(net_type));
+    memcpy(&net_direction, buffer + sizeof(net_length) + sizeof(net_type), sizeof(net_direction));
+    memcpy(&net_speed, buffer + sizeof(net_length) + sizeof(net_type) + sizeof(net_direction), sizeof(net_speed));
 
-    msg->header.length = ntohs(net_length);
-    msg->header.type = ntohs(net_type);
-
-    memcpy(&msg->direction, buffer + sizeof(net_length) + sizeof(net_type), sizeof(msg->direction));
-    memcpy(&msg->speed, buffer + sizeof(net_length) + sizeof(net_type) + sizeof(msg->direction), sizeof(msg->speed));
+    msg->header.length = ntohl(net_length);
+    msg->header.type = ntohl(net_type);
+    msg->direction = ntohs(net_direction);
+    msg->speed = ntohs(net_speed);
 }
 
 //////////////////////////  SEND INFO ROBOT   //////////////////////////
